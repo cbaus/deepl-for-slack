@@ -1,7 +1,7 @@
 import { loadEnv } from "./dotenv";
 loadEnv();
 
-import { App } from "@slack/bolt";
+import { App, GenericMessageEvent } from "@slack/bolt";
 import { ConsoleLogger, LogLevel } from "@slack/logger";
 import * as middleware from "./custom-middleware";
 
