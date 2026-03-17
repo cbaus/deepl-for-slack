@@ -1,16 +1,15 @@
-import { loadEnv } from './dotenv';
+import { loadEnv } from "./dotenv";
 loadEnv();
 
-import {App, GenericMessageEvent} from '@slack/bolt';
-import { ConsoleLogger, LogLevel } from '@slack/logger';
-import * as middleware from './custom-middleware';
+import { App } from "@slack/bolt";
+import { ConsoleLogger, LogLevel } from "@slack/logger";
+import * as middleware from "./custom-middleware";
 
-import { DeepLApi } from './deepl';
-import * as runner from './runnner';
-import * as reacjilator from './reacjilator';
+import { DeepLApi } from "./deepl";
+import * as runner from "./runnner";
+import * as reacjilator from "./reacjilator";
 
-
-const logLevel = process.env.SLACK_LOG_LEVEL as LogLevel || LogLevel.INFO;
+const logLevel = (process.env.SLACK_LOG_LEVEL as LogLevel) || LogLevel.INFO;
 const logger = new ConsoleLogger();
 logger.setLevel(logLevel);
 
@@ -21,9 +20,11 @@ if (!deepLAuthKey) {
 const deepL = new DeepLApi(deepLAuthKey, logger);
 
 const app = new App({
+  logLevel,
   logger,
   token: process.env.SLACK_BOT_TOKEN!!,
-  signingSecret: process.env.SLACK_SIGNING_SECRET!!
+  signingSecret: process.env.SLACK_SIGNING_SECRET!!,
+  deferInitialization: true,
 });
 middleware.enableAll(app);
 
@@ -42,37 +43,41 @@ app.view("run-translation", async ({ ack, client, body }) => {
 
   await ack({
     response_action: "update",
-    view: runner.buildLoadingView(lang, text)
+    view: runner.buildLoadingView(lang, text),
   });
 
   const translatedText: string | null = await deepL.translate(text, lang);
 
   await client.views.update({
     view_id: body.view.id,
-    view: runner.buildResultView(lang, text, translatedText || ":x: Failed to translate it for some reason")
+    view: runner.buildResultView(
+      lang,
+      text,
+      translatedText || ":x: Failed to translate it for some reason"
+    ),
   });
 });
 
 app.view("new-runner", async ({ body, ack }) => {
   await ack({
     response_action: "update",
-    view: runner.buildNewModal(body.view.private_metadata)
-  })
-})
+    view: runner.buildNewModal(body.view.private_metadata),
+  });
+});
 
 // -----------------------------
 // reacjilator
 // -----------------------------
 
-import { ReactionAddedEvent } from './types/reaction-added';
+import { ReactionAddedEvent } from "./types/reaction-added";
 
 app.event("reaction_added", async ({ body, client }) => {
   const event = body.event as ReactionAddedEvent;
-  if (event.item['type'] !== 'message') {
+  if (event.item["type"] !== "message") {
     return;
   }
-  const channelId = event.item['channel'];
-  const messageTs = event.item['ts'];
+  const channelId = event.item["channel"];
+  const messageTs = event.item["ts"];
   if (!channelId || !messageTs) {
     return;
   }
@@ -81,7 +86,11 @@ app.event("reaction_added", async ({ body, client }) => {
     return;
   }
 
-  const replies = await reacjilator.repliesInThread(client, channelId, messageTs);
+  const replies = await reacjilator.repliesInThread(
+    client,
+    channelId,
+    messageTs
+  );
   if (replies.messages && replies.messages.length > 0) {
     const message = replies.messages[0];
     if (message.text) {
@@ -136,6 +145,12 @@ if (process.env.SLACK_AUTO_TRANSLATION_ENABLED === "1") {
 // -----------------------------
 
 (async () => {
-  await app.start(Number(process.env.PORT) || 3000);
-  console.log('⚡️ Bolt app is running!');
+  try {
+    await app.init();
+    await app.start(Number(process.env.PORT) || 3000);
+    console.log("⚡️ Bolt app is running!");
+  } catch (e) {
+    console.log(e);
+    process.exit(1);
+  }
 })();

@@ -6,18 +6,21 @@
   "scripts": {
     "start": "npm run build && node lib/index.js",
     "local": "npm run build:live",
+    "join-all-public-channels": "npm run build && node lib/join-all-public-channels.js",
     "build": "tsc -p .",
     "build:live": "nodemon --watch 'src/**/*.ts' --exec \"ts-node\" src/index.ts"
   },
   "author": "Kazuhiro Sera (@seratch)",
   "license": "MIT",
   "dependencies": {
-    "@slack/bolt": "^3.8.1",
-    "@types/node": "^14.17.34",
-    "axios": "^0.21.4",
+    "@slack/bolt": "^3.21.2",
+    "axios": "^1.12.1",
     "dotenv": "^8.6.0",
-    "nodemon": "^2.0.12",
     "ts-node": "^8.10.2",
-    "typescript": "^4.4.2"
+    "typescript": "^4.9.4"
+  },
+  "devDependencies": {
+    "@types/node": "^18.7.16",
+    "nodemon": "^2.0.19"
   }
 }
