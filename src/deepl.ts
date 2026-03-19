@@ -215,7 +215,7 @@ export class DeepLApi {
               return "<emoji>" + match + "</emoji>";
             })
         ],
-        target_lang: targetLanguage.toUpperCase(),
+        target_lang: targetLang.toUpperCase(),
         tag_handling: "xml",
         ignore_tags: ["emoji", "mrkdwn", "ignore"],
       },
