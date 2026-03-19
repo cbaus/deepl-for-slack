@@ -162,9 +162,7 @@ export class DeepLApi {
 
   async autoTranslate(text: string): Promise<string | null> {
     let [sourceLang, targetLang] = this.guessSourceTargetLang(text);
-    return this.translate(text, targetLang)
     return this.axiosInstance({
-        this.axiosInstance({
       method: "POST",
       url: "/translate",
       data: {
